@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  noticeboard:
+    build: ./noticeboard
+    ports:
+      - 80:3000
+  auth:
+    build: ./authentication_authorization
+    ports:
+      - 81:8000
