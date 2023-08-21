@@ -6,10 +6,12 @@ const accountSchema = new mongoose.Schema({
   password: { type: String, require: true },
   isAdmin: { type: Boolean },
   isBlocked: { type: Boolean },
-  profileImage: { type: String, default: "" },
-  descriptions: { type: String, default: "" },
+  profileImage: { type: String, default: null },
+  descriptions: { type: String, default: null },
   createdAt: { type: Date, immutable: true, default: () => Date.now() },
   updatedAt: { type: Date, default: () => Date.now() },
 });
 
-module.exports = { accountSchema };
+const Account = mongoose.model("account", accountSchema);
+
+module.exports = { Account, accountSchema };

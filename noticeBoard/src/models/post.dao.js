@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
-const { postSchema } = require("../schemas/post.schema");
+const { postSchema, viewRecords } = require("../schemas/post.schema");
 const ObjectId = mongoose.Types.ObjectId;
 const { generateSort } = require("./utils/dao.functions");
 
 const Post = mongoose.model("post", postSchema);
+const ViewRecords = mongoose.model("viewRecords", viewRecords);
 // ***
 const createAPost = async (accountId, requestData) => {
   const { mainCatId, subCatId, title, contents } = requestData;
@@ -79,10 +80,54 @@ const retrievePosts = async (requestData) => {
   }
 };
 // ***
-const retrieveUserPosts = async (requestData) => {
-  const { accountId } = requestData;
-  let { page } = requestData;
+const retrieveUserPosts = async (accountId, page) => {
+  if (page === undefined) {
+    page = 1;
+  }
 
+  const limit = 5;
+  const skip = 5 * (page - 1);
+
+  const agg = [
+    { $match: { accountId } },
+    {
+      $addFields: { postId: "$_id" },
+    },
+    {
+      $sort: { createdAt: -1 },
+    },
+    {
+      $facet: {
+        totalCount: [{ $count: "total" }],
+        paginatedResults: [
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              _id: 0,
+              mainCatId: 1,
+              subCatId: 1,
+              accountId: 1,
+              postId: 1,
+              title: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              views: 1,
+            },
+          },
+        ],
+      },
+    },
+  ];
+  try {
+    const [result] = await Post.aggregate(agg);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const retrieveMyPosts = async (accountId, page) => {
   if (page === undefined) {
     page = 1;
   }
@@ -191,6 +236,61 @@ const getPostAuthorId = async (postId) => {
   }
 };
 
+const insertViewRecords = async (postId, ip, userId) => {
+  console.log(userId, ip, postId);
+  try {
+    await ViewRecords.create({ postId, ip, userId });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const checkViewRecords = async (postId, ip, userId) => {
+  let agg;
+  if (userId === undefined) {
+    agg = [{ $match: { postId, ip } }];
+  } else {
+    agg = [{ $match: { postId, userId } }];
+  }
+  try {
+    const record = await ViewRecords.aggregate(agg);
+    return record;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const retrieveTopViewPosts = async () => {
+  const agg = [{ $sort: { views: -1 } }, { $limit: 5 }];
+  try {
+    return await Post.aggregate(agg);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const retrievePostsByPostIds = async (postIds) => {
+  const agg = [
+    { $match: { _id: { $in: postIds } } },
+    { $addFields: { postId: "$_id" } },
+    {
+      $project: {
+        _id: 0,
+        postId: 1,
+        accountId: 1,
+        title: 1,
+        views: 1,
+        createdAt: 1,
+      },
+    },
+  ];
+  try {
+    return await Post.aggregate(agg);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   retrievePosts,
   retrieveUserPosts,
@@ -200,4 +300,9 @@ module.exports = {
   updateAPost,
   deleteAPost,
   getPostAuthorId,
+  checkViewRecords,
+  insertViewRecords,
+  retrieveTopViewPosts,
+  retrievePostsByPostIds,
+  retrieveMyPosts,
 };

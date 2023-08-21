@@ -2,28 +2,54 @@ const postDao = require("../models/post.dao");
 const likeDao = require("../models/like.dao");
 const error = require("./utils/service.error");
 const { ObjectId } = require("mongodb");
-const { mainCatDao, subCatDao } = require("../models/category.dao");
-const { cookRetrievedPosts } = require("./utils/service.functions");
 const {
-  getUserInfo,
-  getMultipleUserInfos,
-  getUserNames,
-} = require("../utils/superagent");
+  cookRetrievedPosts,
+  updateViewMechanism,
+} = require("./utils/service.functions");
+const { getUserInfo, getUserNames } = require("../utils/superagent");
 // ***
 const createAPost = async (accountId, requestData) => {
   await postDao.createAPost(accountId, requestData);
 };
 // ***
 const retrievePosts = async (requestData) => {
-  return cookRetrievedPosts(requestData, "general");
+  const result = await postDao.retrievePosts(requestData);
+  const posts = result.paginatedResults;
+  if (result.totalCount.length === 0) {
+    return { totalCount: 0, data: [] };
+  }
+  const totalCount = result.totalCount[0].total;
+  const data = await cookRetrievedPosts(posts);
+
+  return { totalCount, data };
 };
 // ***
-const retrieveUserPosts = async (requestData) => {
-  return cookRetrievedPosts(requestData, "userPage");
+const retrieveUserPosts = async (accountId, page) => {
+  const result = await postDao.retrieveUserPosts(accountId, page);
+  const posts = result.paginatedResults;
+  if (result.totalCount.length === 0) {
+    return { totalCount: 0, data: [] };
+  }
+  const totalCount = result.totalCount[0].total;
+  const data = await cookRetrievedPosts(posts);
+
+  return { totalCount, data };
 };
+const retrieveMyPosts = async (myAccountId, page) => {
+  const result = await postDao.retrieveMyPosts(myAccountId, page);
+  const posts = result.paginatedResults;
+  if (result.totalCount.length === 0) {
+    return { totalCount: 0, data: [] };
+  }
+  const totalCount = result.totalCount[0].total;
+  const data = await cookRetrievedPosts(posts);
+
+  return { totalCount, data };
+};
+
 // ***
-const retrieveAPost = async (postId, loggedInUserId) => {
-  await postDao.updateViews(postId);
+const retrieveAPost = async (postId, ip, loggedInUserId) => {
+  await updateViewMechanism(postId, ip, loggedInUserId);
   // <--- post 객체 --->
   // 게시물과 그에 해당되는 좋아요 가져오기
   const [post] = await postDao.retrieveAPost(postId);
@@ -74,6 +100,25 @@ const deleteAPost = async (isAdmin, postId, accountId) => {
   await postDao.deleteAPost(postId);
 };
 
+const retrieveTopPosts = async () => {
+  const topViewPosts = await postDao.retrieveTopViewPosts();
+
+  const likes = await likeDao.retrieveTopLikes();
+  const postIds = likes.map((doc) => new ObjectId(doc.postId));
+  const topLikePostsRaw = await postDao.retrievePostsByPostIds(postIds);
+  let merged = [];
+  for (let i = 0; i < topLikePostsRaw.length; i++) {
+    merged.push({
+      ...topLikePostsRaw[i],
+      ...likes.find(
+        (doc) => doc.postId === topLikePostsRaw[i].postId.toString()
+      ),
+    });
+  }
+  const topLikePosts = merged;
+  return { topViewPosts, topLikePosts };
+};
+
 module.exports = {
   retrievePosts,
   retrieveUserPosts,
@@ -81,4 +126,6 @@ module.exports = {
   deleteAPost,
   createAPost,
   retrieveAPost,
+  retrieveTopPosts,
+  retrieveMyPosts,
 };

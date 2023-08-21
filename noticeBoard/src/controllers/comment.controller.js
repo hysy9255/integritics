@@ -4,8 +4,14 @@ const { asyncWrap } = require("./../utils/error.js");
 const createAComment = asyncWrap(async (req, res) => {
   const accountId = res.locals.accountId;
   const requestData = req.body;
-  await commentService.createAComment(accountId, requestData);
-  res.status(201).send({ message: "Comment has been created" });
+  const created = await commentService.createAComment(accountId, requestData);
+  res.status(201).send({ message: "Comment has been created", created });
+});
+const createAReply = asyncWrap(async (req, res) => {
+  const accountId = res.locals.accountId;
+  const requestData = req.body;
+  await commentService.createAReply(accountId, requestData);
+  res.status(201).send({ message: "Reply has been created" });
 });
 // ***
 const updateAComment = asyncWrap(async (req, res) => {
@@ -15,11 +21,25 @@ const updateAComment = asyncWrap(async (req, res) => {
   res.status(200).send({ message: "Comment has been updated" });
 });
 // ***
+const updateAReply = asyncWrap(async (req, res) => {
+  const accountId = res.locals.accountId;
+  const requestData = req.body;
+  await commentService.updateAReply(accountId, requestData);
+  res.status(200).send({ message: "Reply has been updated" });
+});
+// ***
 const deleteAComment = asyncWrap(async (req, res) => {
   const { isAdmin, accountId } = res.locals;
   const requestData = req.body;
   await commentService.deleteAComment(isAdmin, requestData, accountId);
-  res.status(200).send({ message: "comment has been deleted" });
+  res.status(200).send({ message: "Comment has been deleted" });
+});
+// ***
+const deleteAReply = asyncWrap(async (req, res) => {
+  const { isAdmin, accountId } = res.locals;
+  const requestData = req.body;
+  await commentService.deleteAReply(isAdmin, requestData, accountId);
+  res.status(200).send({ message: "Reply has been deleted" });
 });
 // ***
 const adminDeleteAComment = asyncWrap(async (req, res) => {
@@ -31,18 +51,33 @@ const adminDeleteAComment = asyncWrap(async (req, res) => {
 // ***
 const retrieveComments = asyncWrap(async (req, res) => {
   const loggedInUserId = res.locals.accountId;
-  const { postId } = req.query;
-  const comments = await commentService.retrieveComments(
+  const { postId, page } = req.query;
+  const { totalCount, data } = await commentService.retrieveComments(
     loggedInUserId,
-    postId
+    postId,
+    page
   );
-  res.status(200).send(comments);
+  res.status(200).json({ totalCount, data });
+});
+
+const retrieveReplies = asyncWrap(async (req, res) => {
+  const loggedInUserId = res.locals.accountId;
+  const { commentId } = req.query;
+  const replies = await commentService.retrieveReplies(
+    loggedInUserId,
+    commentId
+  );
+  res.status(200).send(replies);
 });
 
 module.exports = {
   createAComment,
+  createAReply,
   updateAComment,
+  updateAReply,
   deleteAComment,
+  deleteAReply,
   retrieveComments,
+  retrieveReplies,
   adminDeleteAComment,
 };

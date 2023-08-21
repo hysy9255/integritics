@@ -39,7 +39,8 @@ const deleteAccount = asyncWrap(async (req, res) => {
 const updateUserInfo = asyncWrap(async (req, res) => {
   const accountId = res.locals.accountId;
   const requestData = req.body;
-  await userService.updateUserInfo(accountId, requestData);
+  const result = await userService.updateUserInfo(accountId, requestData);
+  console.log(result);
   res.status(200).json({ message: "Successfully updated user information" });
 });
 module.exports = {

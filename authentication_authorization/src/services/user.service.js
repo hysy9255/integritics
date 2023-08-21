@@ -26,7 +26,7 @@ const deleteAccount = async (accountId, password) => {
 };
 // ***
 const updateUserInfo = async (accountId, requestData) => {
-  await userDao.updatePassword(accountId, requestData);
+  await userDao.updateUserInfo(accountId, requestData);
 };
 module.exports = {
   createAccount,

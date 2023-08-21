@@ -112,6 +112,26 @@ const deleteALike = async (accountId, id, identifier) => {
   }
 };
 
+const retrieveTopLikes = async () => {
+  const agg = [
+    {
+      $group: {
+        _id: "$postId",
+        likes: { $count: {} },
+      },
+    },
+    { $addFields: { postId: "$_id" } },
+    { $project: { _id: 0 } },
+    { $sort: { likes: -1 } },
+    { $limit: 5 },
+  ];
+  try {
+    return await Like.aggregate(agg);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   retrieveLikesForPosts,
   retrieveLikesForAPost,
@@ -120,4 +140,5 @@ module.exports = {
   findALike,
   createALike,
   deleteALike,
+  retrieveTopLikes,
 };

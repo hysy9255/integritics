@@ -3,39 +3,6 @@ const { postSchema } = require("../schemas/post.schema");
 
 const Post = mongoose.model("post", postSchema);
 
-// const agg = [
-//   {
-//     $search: { path: keyword },
-//   },
-//   {
-//     $limit: 10,
-//   },
-//   { $project: { title: 1, accountId: 1, mainCatId: 1, subCatId: 1 } },
-// ];
-// db.collection.find({ $text: { $search: "cat" } })
-
-// const searchPosts = async (keyword) => {
-//   try {
-//     const result = await Post.find({ $text: { $search: keyword } });
-//     return result;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
-
-// const agg = [
-//   {
-//     $search: {
-//       index: "postAutoCompleteSearch",
-//       autocomplete: {
-//         query: keyword,
-//         path: "title",
-//         tokenOrder: "sequential",
-//       },
-//     },
-//   },
-// ];
-
 const postAutoCompleteSearch = async (keyword) => {
   const agg = [
     {
@@ -48,9 +15,8 @@ const postAutoCompleteSearch = async (keyword) => {
         },
       },
     },
-    { $addFields: { postId: "$_id" } },
-    { $project: { _id: 0, postId: 1, title: 1 } },
-    { $limit: 10 },
+    { $project: { _id: 0, title: 1 } },
+    { $limit: 4 },
   ];
   try {
     return await Post.aggregate(agg);
@@ -69,7 +35,7 @@ const searchPosts = async (keyword) => {
           path: {
             wildcard: "*",
           },
-          fuzzy: {},
+          fuzzy: { maxEdits: 1, maxExpansions: 300 },
         },
       },
     },
@@ -87,6 +53,7 @@ const searchPosts = async (keyword) => {
         views: 1,
       },
     },
+    { $limit: 10 },
   ];
   try {
     return await Post.aggregate(agg);

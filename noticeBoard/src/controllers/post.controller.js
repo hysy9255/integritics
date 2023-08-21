@@ -17,9 +17,10 @@ const retrievePosts = asyncWrap(async (req, res) => {
 const retrieveAPost = asyncWrap(async (req, res) => {
   const loggedInUserId = res.locals.accountId;
   const postId = req.query.postId;
+  const ip = req.ip;
   const post = loggedInUserId
-    ? await postService.retrieveAPost(postId, loggedInUserId)
-    : await postService.retrieveAPost(postId);
+    ? await postService.retrieveAPost(postId, ip, loggedInUserId)
+    : await postService.retrieveAPost(postId, ip);
   res.status(200).send(post);
 });
 // ***
@@ -45,8 +46,21 @@ const adminDeleteAPost = asyncWrap(async (req, res) => {
 });
 
 const retrieveUserPosts = asyncWrap(async (req, res) => {
-  const requestData = req.query;
-  const posts = await postService.retrieveUserPosts(requestData);
+  const { accountId } = req.query;
+  const { page } = req.params;
+  const posts = await postService.retrieveUserPosts(accountId, page);
+  res.status(200).json(posts);
+});
+
+const retrieveMyPosts = asyncWrap(async (req, res) => {
+  const { page } = req.params;
+  const myAccountId = res.locals.accountId;
+  const posts = await postService.retrieveMyPosts(myAccountId, page);
+  res.status(200).json(posts);
+});
+
+const retrieveTopPosts = asyncWrap(async (req, res) => {
+  const posts = await postService.retrieveTopPosts();
   res.status(200).json(posts);
 });
 
@@ -58,4 +72,6 @@ module.exports = {
   updateAPost,
   deleteAPost,
   adminDeleteAPost,
+  retrieveTopPosts,
+  retrieveMyPosts,
 };

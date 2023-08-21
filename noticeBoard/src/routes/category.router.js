@@ -2,9 +2,7 @@ const express = require("express");
 const categoryRouter = express.Router();
 const { verifyUser, verifyAdmin } = require("../middlewares/signInRequired");
 const { mainCat, subCat, subCatRequest} = require("../controllers/category.controller.js");
-const { retrieveAll }  = require("../controllers/category.controller")
 
-categoryRouter.get("/undefined", retrieveAll)
 categoryRouter.get("", mainCat.retrieveAll); // ***
 categoryRouter.post("/admin", verifyAdmin, mainCat.create); // ***
 categoryRouter.patch("/admin", verifyAdmin, mainCat.update); // ***

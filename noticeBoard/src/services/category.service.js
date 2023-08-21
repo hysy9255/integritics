@@ -5,24 +5,6 @@ const {
   subCatDao,
   subCatReqDao,
 } = require("./../models/category.dao.js");
-const categoryDao = require("../models/category.dao");
-
-const retrieveAll = async () => {
-  const result = await categoryDao.retrieveAll();
-  console.log(result);
-  const result2 = await mainCatDao.retrieveAll();
-  // console.log(result2);
-  const merged = [];
-  for (let i = 0; i < result.length; i++) {
-    merged.push({
-      ...result[i],
-      ...result2.find(
-        (doc) => doc.mainCatId.toString() === result[i].mainCatId
-      ),
-    });
-  }
-  return merged;
-};
 
 const mainCatServ = {
   // ***
@@ -51,8 +33,7 @@ const subCatServ = {
   },
   // ***
   create: async (mainCatId, subCatName) => {
-    const mainCatName = await mainCatDao.getNameById(mainCatId);
-    await error.checkDuplicates.forSub(mainCatId, mainCatName, subCatName);
+    await error.checkDuplicates.forSub(mainCatId, subCatName);
     await subCatDao.create(mainCatId, subCatName);
   },
   // ***
@@ -68,11 +49,11 @@ const subCatServ = {
 const subCatReqServ = {
   // ***
   submit: async (mainCatId, subCatName, accountId) => {
-    const mainCatName = await mainCatDao.getNameById(mainCatId);
-    await error.checkDuplicates.forSub(mainCatId, mainCatName, subCatName);
-    await error.checkDuplicates.forSubReq(mainCatId, mainCatName, subCatName);
+    await error.checkDuplicates.forSub(mainCatId, subCatName);
+    await error.checkDuplicates.forSubReq(mainCatId, subCatName);
     const userInfo = await getUserInfo(accountId);
     const { name, email } = userInfo;
+    const mainCatName = await mainCatDao.getNameById(mainCatId);
     await subCatReqDao.create(mainCatId, mainCatName, subCatName, name, email);
   },
   // ***
@@ -92,4 +73,4 @@ const subCatReqServ = {
   },
 };
 
-module.exports = { retrieveAll, mainCatServ, subCatServ, subCatReqServ };
+module.exports = { mainCatServ, subCatServ, subCatReqServ };

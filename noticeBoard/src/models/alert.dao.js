@@ -3,7 +3,14 @@ const { commentAlert } = require("../schemas/alert.schema");
 const CommentAlert = mongoose.model("comment_alert", commentAlert);
 // ***
 const createAlert = {
-  forComment: async (accountId, userName, postId, title, authorId) => {
+  forComment: async (
+    accountId,
+    userName,
+    postId,
+    title,
+    authorId,
+    commentId
+  ) => {
     try {
       await CommentAlert.create({
         accountId,
@@ -11,6 +18,7 @@ const createAlert = {
         postId,
         title,
         authorId,
+        commentId,
       });
     } catch (error) {
       throw error;
@@ -75,9 +83,20 @@ const deleteReadData = {
   },
 };
 
+const deleteAlert = {
+  forComment: async (commentId) => {
+    try {
+      await CommentAlert.deleteOne({ commentId });
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 module.exports = {
   createAlert,
   retrieveAlert,
   changeReadStatus,
   deleteReadData,
+  deleteAlert,
 };

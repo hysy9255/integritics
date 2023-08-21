@@ -45,6 +45,11 @@ const searchAccounts = async (keyword) => {
   return await infoDao.searchAccounts(keyword);
 };
 
+const userAutoCompleteSearch = async (keyword) => {
+  const result = await infoDao.userAutoCompleteSearch(keyword);
+  return result.map((doc) => doc.name);
+};
+
 module.exports = {
   getUserPageInfo,
   getUserInfo,
@@ -52,4 +57,5 @@ module.exports = {
   getUserNames,
   getUserNamesWithId,
   searchAccounts,
+  userAutoCompleteSearch,
 };

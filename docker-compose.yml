@@ -1,10 +1,40 @@
+# version: "3.8"
+# services:
+#   noticeboard:
+#     image: hysy9255/noticeboard:latest
+#     ports:
+#       - 80:3000
+#   auth:
+#     image: hysy9255/auth:latest
+#     ports:
+#       - 81:8000
+
+# version: "3.8"
+# services:
+#   noticeboard:
+#     image: hysy9255/noticeboard:latest
+#     ports:
+#       - 3005:3000
+#     environment:
+#       - AUTH_SERVER_HOST=auth
+#       - AUTH_SERVER_PORT=8000
+#   auth:
+#     image: hysy9255/auth:latest
+#     ports:
+#       - 3006:8000
+
 version: "3.8"
 services:
   noticeboard:
-    build: ./noticeboard
+    image: hysy9255/noticeboard:latest
     ports:
-      - 80:3000
+      - 3005:3005
+    environment:
+      - AUTH_SERVER_HOST=auth
+      - AUTH_SERVER_PORT=3006
   auth:
-    build: ./authentication_authorization
+    image: hysy9255/auth:latest
     ports:
-      - 81:8000
+      - 3006:3006
+    environment:
+      - ADMIN_PASSWORD=1234

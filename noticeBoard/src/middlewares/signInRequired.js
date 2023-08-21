@@ -1,19 +1,11 @@
-const jwt = require("jsonwebtoken");
 const { detectError } = require("./../utils/error");
-require("dotenv").config({ path: "./../../env/.env" });
+const { AccessKey } = require("./Class/AccessKey");
 
 const verifyUser = async (req, res, next) => {
   try {
-    const token = req.headers.authorization;
-    if (!token) {
-      detectError("TOKEN_DOES_NOT_EXIST");
-    }
-    const decoded = await jwt.verify(token, process.env.SECRETE_KEY);
-    if (!decoded) {
-      detectError("DECODING_TOKEN_FAILED");
-    }
-    res.locals.accountId = decoded.accountId;
-    res.locals.isAdmin = decoded.isAdmin;
+    const accessKey = new AccessKey(req.headers.authorization);
+    accessKey.checkExistence();
+    [res.locals.accountId, res.locals.isAdmin] = await accessKey.decode();
     next();
   } catch (error) {
     next(error);
@@ -21,16 +13,10 @@ const verifyUser = async (req, res, next) => {
 };
 
 const verifyUserOptionally = async (req, res, next) => {
+  if (!req.headers.authorization) return next();
   try {
-    const token = req.headers.authorization;
-    if (!token) {
-      return next();
-    }
-    const decoded = await jwt.verify(token, process.env.SECRETE_KEY);
-    if (!decoded) {
-      detectError("DECODING_TOKEN_FAILED");
-    }
-    res.locals.accountId = decoded.accountId;
+    const accessKey = new AccessKey(req.headers.authorization);
+    [res.locals.accountId, res.locals.isAdmin] = await accessKey.decode();
     next();
   } catch (error) {
     next(error);
@@ -39,19 +25,10 @@ const verifyUserOptionally = async (req, res, next) => {
 
 const verifyAdmin = async (req, res, next) => {
   try {
-    const token = req.headers.authorization;
-    if (!token) {
-      detectError("TOKEN_DOES_NOT_EXIST");
-    }
-    const decoded = await jwt.verify(token, process.env.SECRETE_KEY);
-    if (!decoded) {
-      detectError("DECODING_TOKEN_FAILED");
-    }
-    if (!decoded.isAdmin) {
-      detectError("ACCESS_NOT_ALLOWED_FOR_USER_ACCOUNT");
-    }
-    res.locals.adminAcctId = decoded.accountId;
-    res.locals.isAdmin = decoded.isAdmin;
+    const accessKey = new AccessKey(req.headers.authorization);
+    accessKey.checkExistence();
+    [res.locals.accountId, res.locals.isAdmin] = await accessKey.decode();
+    if (!res.locals.isAdmin) detectError("ACCESS_NOT_ALLOWED_FOR_USER_ACCOUNT");
     next();
   } catch (error) {
     next(error);

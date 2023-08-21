@@ -6,6 +6,7 @@ const commentAlert = new mongoose.Schema({
   postId: { type: String, require: true },
   title: { type: String, require: true },
   authorId: { type: String, require: true },
+  commentId: { type: String, require: true },
   readStatus: { type: Boolean, require: true, default: false },
   createdAt: { type: Date, immutable: true, default: () => Date.now() },
 });

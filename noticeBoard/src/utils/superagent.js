@@ -1,14 +1,15 @@
 const superagent = require("superagent");
 
-// const authServerAddress = "http://localhost:8000";
-const authServerAddress = "http://43.200.7.5:81";
-const userPageServerAddress = "http://localhost:5000/userPage/post";
-
+const authServerAddress = `${process.env.AUTH_SERVER_HOST}:${process.env.AUTH_SERVER_PORT}`;
+// const authServerAddress = `http://localhost:3006`;
+// const authServerAddress = "http://3.36.119.237:81";
+// dddddd
 const pathForGettingUserInfo = "/auth/userInfo";
 const pathForGettingMultipleUserInfos = "/auth/userInfo/list";
 const pathForGettingUserNames = "/auth/userInfo/userNames";
 const pathForGettingUserNamesWithId = "/auth/userInfo/userNamesWithId";
 const pathForGettingSearchAccount = "/auth/userInfo/search";
+const pathForUserAutoCompleteSearch = "/auth/userInfo/search/autoComplete";
 
 const getUserInfo = async (accountId) => {
   const response = await superagent
@@ -40,20 +41,6 @@ const getUserNamesWithId = async (accountIds) => {
   return response.body.userNames;
 };
 
-const sendPostToUserPage = async (accountId, post) => {
-  await superagent.post(userPageServerAddress).send({ accountId, post });
-};
-
-const updatePostFromUserPage = async (accountId, updatedPost) => {
-  await superagent
-    .patch(userPageServerAddress)
-    .send({ accountId, updatedPost });
-};
-
-const deletePostFromUserPage = async (accountId, postId) => {
-  await superagent.delete(userPageServerAddress).send({ accountId, postId });
-};
-
 const searchAccounts = async (keyword) => {
   const response = await superagent
     .get(authServerAddress + pathForGettingSearchAccount)
@@ -62,13 +49,18 @@ const searchAccounts = async (keyword) => {
   return response.body;
 };
 
+const userAutoCompleteSearch = async (keyword) => {
+  const response = await superagent
+    .get(authServerAddress + pathForUserAutoCompleteSearch)
+    .query({ keyword });
+  return response.body;
+};
+
 module.exports = {
   getUserInfo,
   getMultipleUserInfos,
   getUserNames,
-  sendPostToUserPage,
-  deletePostFromUserPage,
-  updatePostFromUserPage,
   getUserNamesWithId,
   searchAccounts,
+  userAutoCompleteSearch,
 };

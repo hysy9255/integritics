@@ -11,4 +11,10 @@ const postSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: () => Date.now() },
 });
 
-module.exports = { postSchema };
+const viewRecords = new mongoose.Schema({
+  postId: { type: String, require: true },
+  ip: { type: String, require: true },
+  userId: { type: String },
+});
+
+module.exports = { postSchema, viewRecords };

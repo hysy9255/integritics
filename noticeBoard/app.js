@@ -11,12 +11,17 @@ const createApp = () => {
   app.use(express.json());
   app.use(cors());
   app.use(morgan("tiny"));
-  app.use(requestIp.mw());
   app.use((req, res, next) => {
-    const ip = req.clientIp;
+    const ip = req.ip;
     console.log(ip);
     next();
   });
+  // app.use(requestIp.mw());
+  // app.use((req, res, next) => {
+  //   const ip = req.clientIp;
+  //   console.log(ip);
+  //   next();
+  // });
 
   app.use(routes);
   app.use(globalErrorHandler);

@@ -1,0 +1,60 @@
+name: Notice Board App
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and push docker image for auth
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: hysy9255/auth
+          registry: docker.io
+          directory: ./authentication_authorization
+          tags: latest
+          dockerfile: ./authentication_authorization/dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push docker image for noticeboard
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: hysy9255/noticeboard
+          registry: docker.io
+          directory: ./noticeBoard
+          tags: latest
+          dockerfile: ./noticeBoard/dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+  # docker-compose:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Install SSH key
+  #       # This is for transferring yml file from repository to ec2
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+  #         chmod 600 ~/.ssh/id_rsa
+
+  #     - name: Copy yml file to EC2
+  #       run: scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./docker-compose.yml ${{ secrets.USER_NAME }}@${{ secrets.HOST }}:~
+
+  #     - name: Executing remote ssh commands
+  #       # Clear existing docker containers and images
+  #       # Then execute "docker-compose up"
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.HOST }}
+  #         username: ${{ secrets.USER_NAME }}
+  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         script: |
+  #           docker-compose down --remove-orphans
+  #           docker container prune -f
+  #           docker rmi $(docker images -a -q)
+  #           docker-compose up -d

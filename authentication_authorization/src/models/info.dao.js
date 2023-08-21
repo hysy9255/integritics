@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
-const { accountSchema } = require("../schemas/account.schema.js");
+const { Account } = require("../schemas/account.schema.js");
 const ObjectId = mongoose.Types.ObjectId;
-
-const Account = mongoose.model("account", accountSchema);
 
 const getUserPageInfo = async (accountId) => {
   const agg = [
@@ -13,12 +11,13 @@ const getUserPageInfo = async (accountId) => {
         name: 1,
         email: 1,
         profileImage: 1,
-        description: 1,
+        descriptions: 1,
       },
     },
   ];
   try {
-    return await Account.aggregate(agg);
+    const user = await Account.aggregate(agg);
+    return user;
   } catch (error) {
     throw error;
   }
@@ -28,7 +27,9 @@ const getUserInfo = async (accountId) => {
   const agg = [
     { $match: { _id: ObjectId(accountId) } },
     { $addFields: { accountId: "$_id" } },
-    { $project: { _id: 0, name: 1, email: 1, profileImage: 1 } },
+    {
+      $project: { _id: 0, name: 1, email: 1, profileImage: 1, descriptions: 1 },
+    },
   ];
   try {
     return await Account.aggregate(agg);
@@ -87,7 +88,7 @@ const searchAccounts = async (keyword) => {
           path: {
             wildcard: "*",
           },
-          fuzzy: {},
+          fuzzy: { maxEdits: 1, maxExpansions: 300 },
         },
       },
     },
@@ -99,9 +100,32 @@ const searchAccounts = async (keyword) => {
         name: 1,
         email: 1,
         profileImage: 1,
-        description: 1,
+        descriptions: 1,
       },
     },
+    { $limit: 10 },
+  ];
+  try {
+    return await Account.aggregate(agg);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const userAutoCompleteSearch = async (keyword) => {
+  const agg = [
+    {
+      $search: {
+        index: "userAutoCompleteSearch",
+        autocomplete: {
+          query: keyword,
+          path: "name",
+          tokenOrder: "sequential",
+        },
+      },
+    },
+    { $project: { _id: 0, name: 1 } },
+    { $limit: 4 },
   ];
   try {
     return await Account.aggregate(agg);
@@ -117,4 +141,5 @@ module.exports = {
   getUserNames,
   getUserNamesWithId,
   searchAccounts,
+  userAutoCompleteSearch,
 };

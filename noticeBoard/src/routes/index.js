@@ -9,7 +9,7 @@ const alertRouter = require("./alert.router.js");
 
 const routes = express.Router();
 routes.use("/nb/category", categoryRouter); // ***
-routes.use("/nb/post", postRouter); // * haven't done userPage yet
+routes.use("/nb/post", postRouter); // ***
 routes.use("/nb/comment", commentRouter); // ***
 routes.use("/nb/like", likeRouter); // ***
 routes.use("/nb/search", searchRouter);

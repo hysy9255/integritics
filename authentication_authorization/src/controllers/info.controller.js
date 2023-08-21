@@ -39,6 +39,12 @@ const searchAccounts = asyncWrap(async (req, res) => {
   res.status(200).json(userAccounts);
 });
 
+const userAutoCompleteSearch = asyncWrap(async (req, res) => {
+  const keyword = req.query.keyword;
+  const result = await infoService.userAutoCompleteSearch(keyword);
+  res.status(200).json(result);
+});
+
 module.exports = {
   getUserPageInfo,
   getUserInfo,
@@ -46,4 +52,5 @@ module.exports = {
   getUserNames,
   getUserNamesWithId,
   searchAccounts,
+  userAutoCompleteSearch,
 };

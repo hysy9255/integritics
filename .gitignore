@@ -1,14 +1,11 @@
 authentication_authorization/node_modules
 authentication_authorization/env/.env
 authentication_authorization/env/.env.test
-authentication_authorization/.gitignore
-authentication_authorization/.dockerignore
 
 noticeBoard/node_modules
 noticeBoard/env/.env
 noticeBoard/env/.env.test
-noticeBoard/.gitignore
 noticeBoard/.prettierignore
-noticeBoard/.dockerignore
 
 .DS_Store
+docker-compose.yml

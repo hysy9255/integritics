@@ -4,12 +4,6 @@ const {
   subCatServ,
   subCatReqServ,
 } = require("./../services/category.service.js");
-const categoryService = require("../services/category.service");
-
-const retrieveAll = asyncWrap(async (req, res) => {
-  const categories = await categoryService.retrieveAll();
-  res.status(200).json(categories);
-});
 
 const mainCat = {
   // ***
@@ -95,5 +89,4 @@ module.exports = {
   mainCat,
   subCat,
   subCatRequest,
-  retrieveAll,
 };

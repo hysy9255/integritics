@@ -9,45 +9,35 @@ const MainCat = mongoose.model("main_category", mainCatSchema);
 const SubCat = mongoose.model("sub_category", subCatSchema);
 const SubCatRequest = mongoose.model("subcat_request", subCatRequestSchema);
 
-const retrieveAll = async () => {
-  const agg = [
-    {
-      $group: {
-        _id: "$mainCatId",
-        subCat: { $push: { name: "$name", id: "$_id" } },
-      },
-    },
-    { $addFields: { mainCatId: "$_id" } },
-    { $project: { _id: 0 } },
-  ];
-  return await SubCat.aggregate(agg);
+// These are for checking duplicates
+const duplicatesDao = {
+  // ***
+  findMainCat: async (mainCatName) => {
+    return await MainCat.findOne({ name: mainCatName });
+  },
+  // ***
+  findSubCat: async (mainCatId, subCatName) => {
+    return await SubCat.findOne({ name: subCatName, mainCatId });
+  },
+  // ***
+  findSubCatReq: async (mainCatId, subCatName) => {
+    return await SubCatRequest.findOne({ mainCatId, subCatName });
+  },
 };
 
 const mainCatDao = {
-  // ***
-  retrieveAll: async () => {
+  // *** - this is needed for retrieving posts
+  getNamesByIds: async (mainCatIds) => {
     const agg = [
+      { $match: { _id: { $in: mainCatIds } } },
       { $addFields: { mainCatId: "$_id", mainCatName: "$name" } },
       { $project: { _id: 0, mainCatId: 1, mainCatName: 1 } },
     ];
     return await MainCat.aggregate(agg);
   },
   // ***
-  findOne: async (mainCatName) => {
-    return await MainCat.findOne({ name: mainCatName });
-  },
-  // ***
-  getNameById: async (mainCatId) => {
-    const mainCat = await MainCat.findOne(
-      { _id: mainCatId },
-      { _id: 0, name: 1 }
-    );
-    return mainCat.name;
-  },
-  // ***
-  getNamesByIds: async (mainCatIds) => {
+  retrieveAll: async () => {
     const agg = [
-      { $match: { _id: { $in: mainCatIds } } },
       { $addFields: { mainCatId: "$_id", mainCatName: "$name" } },
       { $project: { _id: 0, mainCatId: 1, mainCatName: 1 } },
     ];
@@ -67,26 +57,30 @@ const mainCatDao = {
   delete: async (mainCatId) => {
     await MainCat.deleteOne({ _id: mainCatId });
   },
+
+  getNameById: async (mainCatId) => {
+    const mainCat = await MainCat.findById(mainCatId);
+    if (!mainCat) {
+      throw new Error("Main category with given id is not found");
+    }
+    return mainCat.name;
+  },
 };
 
 const subCatDao = {
-  // ***
-  retrieveAll: async (mainCatId) => {
+  // *** this is for retrieving posts
+  getNamesByIds: async (subCatIds) => {
     const agg = [
-      { $match: { mainCatId } },
+      { $match: { _id: { $in: subCatIds } } },
       { $addFields: { subCatId: "$_id", subCatName: "$name" } },
       { $project: { _id: 0, subCatId: 1, subCatName: 1 } },
     ];
     return await SubCat.aggregate(agg);
   },
   // ***
-  findSubCat: async (mainCatId, subCatName) => {
-    return await SubCat.findOne({ name: subCatName, mainCatId });
-  },
-  // ***
-  getNamesByIds: async (subCatIds) => {
+  retrieveAll: async (mainCatId) => {
     const agg = [
-      { $match: { _id: { $in: subCatIds } } },
+      { $match: { mainCatId } },
       { $addFields: { subCatId: "$_id", subCatName: "$name" } },
       { $project: { _id: 0, subCatId: 1, subCatName: 1 } },
     ];
@@ -110,15 +104,6 @@ const subCatDao = {
 
 const subCatReqDao = {
   // ***
-  retrieveAll: async () => {
-    const agg = [
-      { $match: {} },
-      { $addFields: { subCatReqId: "$_id" } },
-      { $project: { _id: 0, __v: 0, mainCatId: 0 } },
-    ];
-    return await SubCatRequest.aggregate(agg);
-  },
-  // ***
   findSubCatReqById: async (subCatReqId) => {
     return await SubCatRequest.findOne(
       { _id: subCatReqId },
@@ -126,8 +111,13 @@ const subCatReqDao = {
     );
   },
   // ***
-  findSubCatReq: async (mainCatId, subCatName) => {
-    return await SubCatRequest.findOne({ mainCatId, subCatName });
+  retrieveAll: async () => {
+    const agg = [
+      { $match: {} },
+      { $addFields: { subCatReqId: "$_id" } },
+      { $project: { _id: 0, __v: 0, mainCatId: 0 } },
+    ];
+    return await SubCatRequest.aggregate(agg);
   },
   // ***
   create: async (mainCatId, mainCatName, subCatName, name, email) => {
@@ -145,4 +135,4 @@ const subCatReqDao = {
   },
 };
 
-module.exports = { retrieveAll, mainCatDao, subCatDao, subCatReqDao };
+module.exports = { mainCatDao, subCatDao, subCatReqDao, duplicatesDao };

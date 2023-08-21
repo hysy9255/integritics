@@ -1,7 +1,5 @@
-const mongoose = require("mongoose");
-const { accountSchema } = require("../schemas/account.schema.js");
 const { detectError } = require("../utils/error");
-const Account = mongoose.model("account", accountSchema);
+const { Account } = require("../schemas/account.schema");
 // ***
 const createAccount = async (name, email, password) => {
   try {
@@ -60,11 +58,12 @@ const deleteAccount = async (accountId) => {
 };
 
 const updateUserInfo = async (accountId, requestData) => {
-  const { newProfileImage, newDescription } = requestData;
+  console.log(requestData);
+  const { profileImage, descriptions } = requestData;
   try {
-    await Account.updateOne(
+    return await Account.updateOne(
       { _id: accountId },
-      { $set: { profileImage: newProfileImage, description: newDescription } }
+      { $set: { profileImage, descriptions } }
     );
   } catch (error) {
     throw error;
